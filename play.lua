@@ -5,7 +5,7 @@ local decoder = dfpwm.make_decoder()
 local nft = require("cc.image.nft")
 
 local url_image = "https://raw.githubusercontent.com/nissene99/nggyu-cc-tweaked/main/image/"
-local url_sound = "https://raw.githubusercontent.com/nissene99/nggyu-cc-tweaked/main/audio/"
+local url_sound = "https://raw.githubusercontent.com/nissene99/nggyu-cc-tweaked/main/audio/small.dfpwm"
 
 local function download(url)
     local request = http.get(url)
@@ -41,13 +41,6 @@ local function format_number(num)
     return str
 end
 
-local function play_audios(begin_index, end_index)
-    for i = begin_index, end_index do
-        local num = format_number(i)
-        play(url_sound .. num .. ".dfpwm")
-    end
-end
-
 local function show_image(url, duration)
     local data = download(url)
     local file = io.open("temp.nfp", "w")
@@ -71,12 +64,12 @@ local function video_player()
     local begin_index = 1
     local end_index = 212
     local duration = 1
-    parallel.waitForAny(
+    parallel.waitForAll(
         function()
             show_images(begin_index, end_index, duration)
         end,
         function()
-            play_audios(begin_index, end_index)
+            play(url_sound)
         end
     )
 end
