@@ -5,7 +5,7 @@ local decoder = dfpwm.make_decoder()
 local nft = require("cc.image.nft")
 
 local url_image = "https://raw.githubusercontent.com/nissene99/nggyu-cc-tweaked/main/image/"
-local url_sound = "https://raw.githubusercontent.com/nissene99/nggyu-cc-tweaked/main/audio/small.dfpwm"
+local url_sound = "https://raw.githubusercontent.com/nissene99/nggyu-cc-tweaked/main/audio/"
 
 local function download(url)
     local request = http.get(url)
@@ -30,49 +30,53 @@ local function play(url)
         end
     end
     -- delete the file
-    shell.run("rm temp.dfpwm")
+    fs.delete("temp.dfpwm")
 end
 
-local function format_number(length, num)
+local function format_number(num)
     local str = tostring(num)
-    while #str < length do
+    while str:len() < 4 do
         str = "0" .. str
     end
     return str
 end
+
+local function play_audios(begin_index, end_index)
+    for i = begin_index, end_index do
+        local num = format_number(i)
+        play(url_sound .. num .. ".dfpwm")
+    end
 end
 
 local function show_image(url, duration)
     local data = download(url)
-    local file = io.open("temp.nft", "w")
+    local file = io.open("temp.nfp", "w")
     file:write(data)
     file:close()
     local image = assert(
-        ntf.load("temp.nft")
+        nft.load("temp.nfp")
     )
     nft.draw(image, term.getCursorPos())
     os.sleep(duration)
-    shell.run("rm temp.nft")
+    fs.delete("temp.nfp")
 end
 
-local function show_images(begin_index, end_index, length, duration)
+local function show_images(begin_index, end_index, duration)
     for i = begin_index, end_index do
-        local num = format_number(length, i)
-        show_image(url_image .. format_number(num, 4) .. ".nft", duration)
+        show_image(url_image .. format_number(i) .. ".nfp", duration)
     end
 end
 
 local function video_player()
     local begin_index = 1
     local end_index = 212
-    local length = 4
     local duration = 1
     parallel.waitForAny(
         function()
-            show_images(begin_index, end_index, length, duration)
+            show_images(begin_index, end_index, duration)
         end,
         function()
-            play(url_sound)
+            play_audios(begin_index, end_index)
         end
     )
 end
