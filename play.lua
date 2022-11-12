@@ -16,6 +16,9 @@ local function download(url)
 end
 
 local function play(url)
+    local samples_i, samples_n = 1, 48000 * 1.5
+    local samples = {}
+    for i = 1, samples_n do samples[i] = 0 end
     local data = download(url)
     -- save the file to disk
     local file = io.open("disk/temp.dfpwm", "wb")
@@ -23,9 +26,22 @@ local function play(url)
     file:close()
     -- play the file
     for chunk in io.lines("disk/temp.dfpwm", 16*1024) do
-        local buf = decoder(chunk)
+        local buffer = decoder(chunk)
 
-        while not speaker.playAudio(buf) do
+        for i = 1, #buffer do
+            local original_value = buffer[i]
+
+            -- Replace this sample with its current amplitude plus the amplitude from 1.5 seconds ago.
+            -- We scale both to ensure the resulting value is still between -128 and 127.
+            buffer[i] = original_value * 0.6 + samples[samples_i] * 0.4
+
+            -- Now store the current sample, and move the "head" of our ring buffer forward one place.
+            samples[samples_i] = original_value
+            samples_i = samples_i + 1
+            if samples_i > samples_n then samples_i = 1 end
+        end
+
+        while not speaker.playAudio(buffer) do
             os.pullEvent("speaker_audio_empty")
         end
     end
@@ -78,7 +94,7 @@ local function video_player()
             show_images(begin_index, end_index, duration)
         end,
         function()
-            play_audios(0, 106)
+            play_audios(0, 21)
         end
     )
 end
