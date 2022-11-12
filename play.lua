@@ -18,7 +18,7 @@ end
 local function play(url)
     local data = download(url)
     -- save the file to disk
-    local file = io.open("temp.dfpwm", "w")
+    local file = io.open("temp.dfpwm", "wb")
     file:write(data)
     file:close()
     -- play the file
